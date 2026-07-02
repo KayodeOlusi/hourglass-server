@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: hourglass_db
+    env_file: .env
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - hourglass_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+  redis:
+    image: redis:7-alpine
+    container_name: hourglass_redis
+    env_file: .env
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - hourglass_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
+  app:
+    container_name: hourglass_app
+    env_file: .env
+    restart: unless-stopped
+    build:
+      context: .
+      target: development
+    ports:
+      - "${APP_PORT:-4000}:4000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: yarn dev
+volumes:
+  hourglass_db_data:
+  hourglass_redis_data:

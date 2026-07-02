@@ -1,0 +1,12 @@
+{
+  "name": "hourglass-server",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/app",
+  "shutdownAction": "stopCompose",
+  "customizations": {
+    "vscode": {
+      "extensions": ["Prisma.prisma"]
+    }
+  }
+}
