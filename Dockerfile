@@ -7,6 +7,7 @@ RUN apt-get update -y \
 
 COPY package.json yarn.lock* ./
 COPY src/db/prisma ./src/db/prisma
+COPY src/db/models ./src/db/models
 
 FROM base AS development
 ENV NODE_ENV=development

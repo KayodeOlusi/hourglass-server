@@ -19,7 +19,7 @@
   "author": "Kayode Oluwalusi",
   "license": "ISC",
   "prisma": {
-    "schema": "src/db/prisma/schema.prisma"
+    "schema": "src/db"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
