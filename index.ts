@@ -6,10 +6,15 @@ import { lib } from "./src/lib";
 const server = http.createServer(app);
 const PORT = process.env.PORT ?? 4000;
 
-function shutdown() {
+
+async function shutdown() {
   lib.logger.info("Shutting down server...");
   server.close(async function () {
-    lib.logger.info("Server closed.");
+    lib.logger.info("HTTP server closed.");
+    await lib.queue.close();
+    await redis.quit();
+    await prisma.$disconnect();
+    lib.logger.info("Connections closed.");
     process.exit(0);
   });
 }
