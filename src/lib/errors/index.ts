@@ -83,6 +83,16 @@ class ForbiddenException extends Error implements ErrorCode {
   }
 }
 
+class ServiceUnavailableException extends Error implements ErrorCode {
+  code: number;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "ServiceUnavailableException";
+    this.code = HttpStatusCodes.SERVICE_UNAVAILABLE;
+  }
+}
+
 export {
   Exception,
   ResourceExistsException,
@@ -92,4 +102,5 @@ export {
   NotFoundException,
   UnauthorizedException,
   ForbiddenException,
+  ServiceUnavailableException,
 };

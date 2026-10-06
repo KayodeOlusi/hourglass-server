@@ -1,0 +1,24 @@
+enum DevicePlatform {
+  ios
+  android
+}
+
+model UserDevice {
+  id          String         @id @default(uuid(7)) @db.Uuid
+  userId      String         @map("user_id") @db.Uuid
+  deviceToken String?        @unique @map("device_token")
+  platform    DevicePlatform
+  deviceName  String?        @map("device_name")
+  appVersion  String?        @map("app_version")
+  osVersion   String?        @map("os_version")
+  pushEnabled Boolean        @default(true) @map("push_enabled")
+  lastSeenAt  DateTime?      @map("last_seen_at") @db.Timestamptz(3)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  deletedAt   DateTime?      @map("deleted_at") @db.Timestamptz(3)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  sessions Session[]
+
+  @@index([userId])
+  @@map("user_devices")
+}

@@ -1,0 +1,18 @@
+model Session {
+  id               String    @id @default(uuid(7)) @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  deviceId         String    @map("device_id") @db.Uuid
+  refreshTokenHash String    @unique @map("refresh_token_hash") // sha256 of the raw token, never the token itself
+  issuedAt         DateTime  @default(now()) @map("issued_at") @db.Timestamptz(3)
+  expiresAt        DateTime  @map("expires_at") @db.Timestamptz(3)
+  lastUsedAt       DateTime? @map("last_used_at") @db.Timestamptz(3)
+  revokedAt        DateTime? @map("revoked_at") @db.Timestamptz(3)
+  userAgent        String?   @map("user_agent")
+  ipAddress        String?   @map("ip_address")
+
+  user   User       @relation(fields: [userId], references: [id], onDelete: Restrict)
+  device UserDevice @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+
+  @@index([userId, revokedAt])
+  @@map("sessions")
+}

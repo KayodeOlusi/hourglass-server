@@ -9,10 +9,12 @@ model AuthIdentity {
   provider        AuthProvider
   providerUserId  String       @map("provider_user_id")
   emailAtProvider String?      @map("email_at_provider")
+  isPrivateEmail  Boolean      @default(false) @map("is_private_email") // Apple Hide My Email relay
   createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   lastUsedAt      DateTime?    @map("last_used_at") @db.Timestamptz(3)
+  deletedAt       DateTime?    @map("deleted_at") @db.Timestamptz(3)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@unique([provider, providerUserId])
   @@index([userId])

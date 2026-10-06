@@ -1,7 +1,6 @@
 enum UserStatus {
   ACTIVE
   INACTIVE
-  PENDING_DELETION
   DELETED
 }
 
@@ -20,6 +19,8 @@ model User {
   deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz(3)
 
   authIdentities AuthIdentity[]
+  devices        UserDevice[]
+  sessions       Session[]
 
   @@index([status, lastActiveAt])
   @@map("users")
