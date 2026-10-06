@@ -11,6 +11,9 @@ COPY src/db/models ./src/db/models
 
 FROM base AS development
 ENV NODE_ENV=development
+RUN apt-get update -y \
+    && apt-get install -y --no-install-recommends curl git \
+    && rm -rf /var/lib/apt/lists/*
 RUN yarn install
 COPY . .
 EXPOSE 4000

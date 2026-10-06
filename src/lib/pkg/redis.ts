@@ -1,20 +1,23 @@
-import Redis from "ioredis";
-import { lib } from "..";
+import Redis, { RedisOptions } from "ioredis";
+import { loggerActions as logger } from "../logger";
 
 const environment = process.env.NODE_ENV;
 
-const redis = new Redis({
+const redisOptions: RedisOptions = {
   host: process.env.REDIS_HOST,
   port: Number(process.env.REDIS_PORT),
   ...(environment === "production" ? { password: process.env.REDIS_PASSWORD } : {}),
-});
+};
+
+const redis = new Redis(redisOptions);
 
 async function testRedisConnection(client: typeof redis) {
   try {
     await client.ping();
-    lib.logger.info("Redis connection successful");
+    logger.info("Redis connection has been established successfully.");
   } catch (error) {
-    lib.logger.error("Redis connection error:", { error });
+    logger.error("Error in Redis connection", error as Error);
+    throw error;
   }
 }
 
@@ -33,4 +36,4 @@ const redisActions = {
   },
 };
 
-export { redisActions, testRedisConnection, redis };
+export { redisActions, testRedisConnection, redisOptions, redis };
