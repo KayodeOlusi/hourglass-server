@@ -1,0 +1,26 @@
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_DELETION
+  DELETED
+}
+
+model User {
+  id           String     @id @default(uuid(7)) @db.Uuid
+  email        String     @unique
+  firstName    String?    @map("first_name")
+  lastName     String?    @map("last_name")
+  displayName  String?    @map("display_name")
+  avatarUrl    String?    @map("avatar_url")
+  status       UserStatus @default(ACTIVE)
+  lastActiveAt DateTime?  @map("last_active_at") @db.Timestamptz(3)
+  lastLoginAt  DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime?  @map("deleted_at") @db.Timestamptz(3)
+
+  authIdentities AuthIdentity[]
+
+  @@index([status, lastActiveAt])
+  @@map("users")
+}
