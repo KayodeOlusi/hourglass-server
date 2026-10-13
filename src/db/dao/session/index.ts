@@ -1,9 +1,10 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/client";
+import { Db } from "../helpers";
 
 const Sessions = {
-  async create(data: Prisma.SessionUncheckedCreateInput) {
-    return await prisma.session.create({ data });
+  async create(data: Prisma.SessionUncheckedCreateInput, db: Db = prisma) {
+    return await db.session.create({ data });
   },
   async findActiveByHash(refreshTokenHash: string) {
     return await prisma.session.findFirst({

@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/client";
-import { excludeDeleted, FindOptions } from "../helpers";
+import { Db, excludeDeleted, FindOptions } from "../helpers";
 
 const User = {
   async findById(id: string, options?: FindOptions) {
@@ -12,8 +12,8 @@ const User = {
   async create(data: Prisma.UserCreateInput) {
     return await prisma.user.create({ data });
   },
-  async update(id: string, data: Prisma.UserUpdateInput) {
-    return await prisma.user.update({ where: { id }, data });
+  async update(id: string, data: Prisma.UserUpdateInput, db: Db = prisma) {
+    return await db.user.update({ where: { id }, data });
   },
   async delete(id: string) {
     const now = new Date();

@@ -1,16 +1,27 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/client";
+import { Db } from "../helpers";
+
+type DeviceData = Omit<Prisma.UserDeviceUncheckedCreateInput, "installationId">;
 
 const UserDevices = {
-  async create(data: Prisma.UserDeviceUncheckedCreateInput) {
-    return await prisma.userDevice.create({ data });
+  async create(data: Prisma.UserDeviceUncheckedCreateInput, db: Db = prisma) {
+    return await db.userDevice.create({ data });
   },
-  // A device token belongs to one physical device; whoever signs in on it last owns it.
-  async upsertByToken(deviceToken: string, data: Prisma.UserDeviceUncheckedCreateInput) {
-    return await prisma.userDevice.upsert({
-      where: { deviceToken },
-      create: { ...data, deviceToken },
-      update: { ...data, deviceToken, deletedAt: null },
+  // One row per app install; whoever signs in on it last owns it. A push token belongs to one
+  // physical device, so it's taken off any other install still holding it (e.g. after a reinstall).
+  async upsertByInstallation(installationId: string, data: DeviceData, db: Db = prisma) {
+    if (data.deviceToken) {
+      await db.userDevice.updateMany({
+        where: { deviceToken: data.deviceToken, installationId: { not: installationId } },
+        data: { deviceToken: null },
+      });
+    }
+
+    return await db.userDevice.upsert({
+      where: { installationId },
+      create: { ...data, installationId },
+      update: { ...data, deletedAt: null },
     });
   },
 };

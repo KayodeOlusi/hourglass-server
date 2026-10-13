@@ -8,6 +8,7 @@ type OAuthProfile = {
   sub: string;
   email?: string;
   emailVerified: boolean;
+  emailAuthoritative: boolean;
   isPrivateEmail: boolean;
   firstName?: string;
   lastName?: string;
@@ -52,18 +53,28 @@ function isTrue(claim: unknown) {
   return claim === true || claim === "true";
 }
 
-function verifyNonce(payload: JWTPayload, nonce?: string) {
-  const claim = payload.nonce as string | undefined;
-  if (nonce === undefined && claim === undefined) return;
+// Apple only issues verified addresses (real or private relay). Google is only the authority for
+// Gmail and Workspace (hd) addresses; any other address was verified at sign-up but may since have
+// changed hands (person left the company, domain expired and was re-registered).
+function isEmailAuthoritative(provider: AuthProvider, payload: JWTPayload) {
+  const email = typeof payload.email === "string" ? payload.email.toLowerCase() : undefined;
+  if (!email || !isTrue(payload.email_verified)) return false;
+  if (provider === "apple") return true;
 
-  const hashed = nonce && crypto.createHash("sha256").update(nonce).digest("hex");
-  if (!nonce || !claim || (claim !== nonce && claim !== hashed)) {
-    throw new UnauthorizedException("Invalid nonce");
-  }
+  const domain = email.split("@")[1];
+  const hostedDomain = typeof payload.hd === "string" ? payload.hd.toLowerCase() : undefined;
+  return domain === "gmail.com" || domain === "googlemail.com" || (!!hostedDomain && domain === hostedDomain);
+}
+
+// Some SDKs put the raw nonce in the token, others its sha256; accept either.
+function verifyNonce(payload: JWTPayload, nonce: string) {
+  const claim = payload.nonce;
+  const hashed = crypto.createHash("sha256").update(nonce).digest("hex");
+  if (claim !== nonce && claim !== hashed) throw new UnauthorizedException("Invalid nonce");
 }
 
 const oauthActions = {
-  async verifyIdToken(provider: AuthProvider, idToken: string, nonce?: string): Promise<OAuthProfile> {
+  async verifyIdToken(provider: AuthProvider, idToken: string, nonce: string): Promise<OAuthProfile> {
     const config = providers[provider];
     const audience = getAudience(config.audienceEnv);
 
@@ -89,6 +100,7 @@ const oauthActions = {
       sub: payload.sub as string,
       email: payload.email as string | undefined,
       emailVerified: isTrue(payload.email_verified),
+      emailAuthoritative: isEmailAuthoritative(provider, payload),
       isPrivateEmail: isTrue(payload.is_private_email),
       firstName: payload.given_name as string | undefined,
       lastName: payload.family_name as string | undefined,

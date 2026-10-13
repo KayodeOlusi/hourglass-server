@@ -34,6 +34,9 @@ const redisActions = {
   async addWithExp(key: string, value: string, exp: number) {
     return await redis.set(key, value, "EX", exp);
   },
+  async ping() {
+    return await redis.ping();
+  },
   // Atomic read + delete, so a value can only ever be consumed once.
   async consume(key: string) {
     return await redis.getdel(key);

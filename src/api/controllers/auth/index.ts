@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { AuthProvider } from "@prisma/client";
 import { services } from "../../services";
 import { ApiBuilders } from "../../builders";
+import { serializers } from "../../serializers";
 import { handleError } from "../../../utils/handlers";
 import { BadRequestException } from "../../../lib/errors";
 import { HttpStatusCodes } from "../../../typings/enums/http-codes";
@@ -27,7 +28,9 @@ const authController = {
   async signIn(req: Request, res: Response) {
     try {
       const provider = req.params.provider as string;
-      if (!PROVIDERS.includes(provider)) throw new BadRequestException("Unsupported sign-in provider");
+      if (!PROVIDERS.includes(provider)) {
+        throw new BadRequestException("Unsupported sign-in provider");
+      }
 
       const { user, accessToken, refreshToken } = await services.AuthService.signIn(
         provider as AuthProvider,
@@ -39,7 +42,7 @@ const authController = {
         status: true,
         code: HttpStatusCodes.SUCCESSFUL_REQUEST,
         message: "Signed in successfully",
-        data: user,
+        data: serializers.UserSerializer.toPublic(user),
         addOns: { access_token: accessToken, refresh_token: refreshToken },
       });
     } catch (e) {

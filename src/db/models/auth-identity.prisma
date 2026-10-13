@@ -4,15 +4,17 @@ enum AuthProvider {
 }
 
 model AuthIdentity {
-  id              String       @id @default(uuid(7)) @db.Uuid
-  userId          String       @map("user_id") @db.Uuid
-  provider        AuthProvider
-  providerUserId  String       @map("provider_user_id")
-  emailAtProvider String?      @map("email_at_provider")
-  isPrivateEmail  Boolean      @default(false) @map("is_private_email") // Apple Hide My Email relay
-  createdAt       DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  lastUsedAt      DateTime?    @map("last_used_at") @db.Timestamptz(3)
-  deletedAt       DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  id                 String       @id @default(uuid(7)) @db.Uuid
+  userId             String       @map("user_id") @db.Uuid
+  provider           AuthProvider
+  providerUserId     String       @map("provider_user_id")
+  emailAtProvider    String?      @map("email_at_provider")
+  isPrivateEmail     Boolean      @default(false) @map("is_private_email") // Apple Hide My Email relay
+  // Provider owns the address (Apple, Gmail, Workspace), so the account can be linked to by this email
+  emailAuthoritative Boolean      @default(false) @map("email_authoritative")
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastUsedAt         DateTime?    @map("last_used_at") @db.Timestamptz(3)
+  deletedAt          DateTime?    @map("deleted_at") @db.Timestamptz(3)
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
