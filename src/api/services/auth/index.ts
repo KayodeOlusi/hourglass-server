@@ -34,7 +34,6 @@ async function fillMissingName(user: User, profile: OAuthProfile, body: SignInBo
   return await dao.User.update(user.id, { firstName, lastName });
 }
 
-// Checked before any write, so a deleted or inactive account never gets new rows attached to it.
 function assertActive(user: User) {
   if (user.status !== "ACTIVE") throw new ForbiddenException("This account is not active");
 }
@@ -143,8 +142,6 @@ async function createSession(userId: string, deviceId: string, meta: RequestMeta
 }
 
 const AuthService = {
-  // One-time nonce the app bakes into the provider sign-in request. Stored in Redis so the server
-  // only accepts nonces it issued, and consumed on use so a captured id_token can't be replayed.
   async createNonce() {
     const nonce = crypto.randomBytes(16).toString("base64url");
     await lib.redis.addWithExp(nonceKey(nonce), "1", NONCE_TTL_SECONDS);
@@ -152,26 +149,34 @@ const AuthService = {
   },
 
   async signIn(provider: AuthProvider, body: SignInBody, meta: RequestMeta) {
-    // Verify before consuming the nonce, so a provider outage (503) doesn't burn it and the app can
-    // retry with the same id_token. The token must carry this nonce, so it can't be used with another.
-    const profile = await lib.oauth.verifyIdToken(provider, body.id_token, body.nonce);
+    const profile = await lib.oauth.verifyIdToken(
+      provider,
+      body.id_token,
+      body.nonce,
+    );
     if (!(await lib.redis.consume(nonceKey(body.nonce)))) {
       throw new UnauthorizedException("Invalid or expired nonce");
     }
 
     // Two first-time sign-ins for the same account can race to create it. The loser hits the unique
     // constraint; by then the winner's rows exist, so running it again just finds them.
-    const user = await findOrCreateUser(provider, profile, body).catch((error) => {
-      if (!isUniqueViolation(error)) throw error;
-      return findOrCreateUser(provider, profile, body);
-    });
+    const user = await findOrCreateUser(provider, profile, body).catch(
+      error => {
+        if (!isUniqueViolation(error)) throw error;
+        return findOrCreateUser(provider, profile, body);
+      },
+    );
 
-    return await dao.transaction(async (tx) => {
+    return await dao.transaction(async tx => {
       const device = await registerDevice(user.id, body.device, tx);
       const tokens = await createSession(user.id, device.id, meta, tx);
 
       const now = new Date();
-      const updatedUser = await dao.User.update(user.id, { lastLoginAt: now, lastActiveAt: now }, tx);
+      const updatedUser = await dao.User.update(
+        user.id,
+        { lastLoginAt: now, lastActiveAt: now },
+        tx,
+      );
 
       return { user: updatedUser, ...tokens };
     });
@@ -180,14 +185,23 @@ const AuthService = {
   async refresh(refreshToken: string) {
     const oldHash = services.TokenService.hash(refreshToken);
     const session = await dao.Sessions.findActiveByHash(oldHash);
-    if (!session) throw new UnauthorizedException("Invalid or expired refresh token");
+    if (!session)
+      throw new UnauthorizedException("Invalid or expired refresh token");
 
     const newRefreshToken = services.TokenService.generateRefreshToken();
-    const rotated = await dao.Sessions.rotate(session.id, oldHash, services.TokenService.hash(newRefreshToken));
-    if (!rotated) throw new UnauthorizedException("Invalid or expired refresh token");
+    const rotated = await dao.Sessions.rotate(
+      session.id,
+      oldHash,
+      services.TokenService.hash(newRefreshToken),
+    );
+    if (!rotated)
+      throw new UnauthorizedException("Invalid or expired refresh token");
 
     return {
-      accessToken: services.TokenService.generateAccessToken({ sub: session.userId, sid: session.id }),
+      accessToken: services.TokenService.generateAccessToken({
+        sub: session.userId,
+        sid: session.id,
+      }),
       refreshToken: newRefreshToken,
     };
   },
