@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { fields } from "../fields";
 
 const AuthValidatorSchema = {
   SignIn: yup.object({
@@ -6,9 +7,14 @@ const AuthValidatorSchema = {
     nonce: yup.string().required(),
     first_name: yup.string().trim().optional(),
     last_name: yup.string().trim().optional(),
+    timezone: fields.timezone().optional(),
+    locale: fields.locale().optional(),
     device: yup
       .object({
-        platform: yup.string().oneOf(["ios", "android"] as const).required(),
+        platform: yup
+          .string()
+          .oneOf(["ios", "android"] as const)
+          .required(),
         installation_id: yup.string().trim().max(255).required(),
         device_token: yup.string().optional(),
         device_name: yup.string().optional(),

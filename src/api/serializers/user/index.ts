@@ -1,7 +1,5 @@
 import { User } from "@prisma/client";
 
-// The public shape of a user. Internal fields (status, deletedAt, activity timestamps) stay out,
-// so the response doesn't change whenever the table does.
 const UserSerializer = {
   toPublic(user: User) {
     return {

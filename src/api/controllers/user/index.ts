@@ -37,6 +37,36 @@ const userController = {
     }
   },
 
+  async getSettings(req: Request, res: Response) {
+    try {
+      const settings = await services.UserService.getSettings(res.locals.user.id);
+
+      return ApiBuilders.buildResponse(res, {
+        status: true,
+        code: HttpStatusCodes.SUCCESSFUL_REQUEST,
+        message: "Settings fetched successfully",
+        data: serializers.UserSettingsSerializer.toPublic(settings),
+      });
+    } catch (e) {
+      return handleError(e, res);
+    }
+  },
+
+  async updateSettings(req: Request, res: Response) {
+    try {
+      const settings = await services.UserService.updateSettings(res.locals.user.id, req.body);
+
+      return ApiBuilders.buildResponse(res, {
+        status: true,
+        code: HttpStatusCodes.SUCCESSFUL_REQUEST,
+        message: "Settings updated successfully",
+        data: serializers.UserSettingsSerializer.toPublic(settings),
+      });
+    } catch (e) {
+      return handleError(e, res);
+    }
+  },
+
   async deleteAccount(req: Request, res: Response) {
     try {
       await services.UserService.deleteAccount(res.locals.user.id);

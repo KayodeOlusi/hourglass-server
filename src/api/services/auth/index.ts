@@ -170,6 +170,11 @@ const AuthService = {
     return await dao.transaction(async tx => {
       const device = await registerDevice(user.id, body.device, tx);
       const tokens = await createSession(user.id, device.id, meta, tx);
+      await dao.UserSettings.findOrCreate(
+        user.id,
+        { timezone: body.timezone, locale: body.locale },
+        tx,
+      );
 
       const now = new Date();
       const updatedUser = await dao.User.update(

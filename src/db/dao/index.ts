@@ -4,12 +4,14 @@ import { User } from "./user";
 import { AuthIdentities } from "./auth-identity";
 import { UserDevices } from "./user-device";
 import { Sessions } from "./session";
+import { UserSettings } from "./user-settings";
 
 const dao = {
   User,
   AuthIdentities,
   UserDevices,
   Sessions,
+  UserSettings,
   async ping() {
     await prisma.$queryRaw`SELECT 1`;
   },

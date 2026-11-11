@@ -1,0 +1,31 @@
+enum TimezoneBehavior {
+  FIXED
+  FLOATING
+}
+
+enum Theme {
+  SYSTEM
+  LIGHT
+  DARK
+}
+
+// Preferences and device context, kept off users so that table stays identity only.
+// One row per user, created at sign-in; timezone defaults to UTC until the app sends one.
+model UserSettings {
+  id                          String           @id @default(uuid(7)) @db.Uuid
+  userId                      String           @unique @map("user_id") @db.Uuid
+  timezone                    String           @default("UTC")
+  locale                      String           @default("en")
+  defaultReminderMinutes      Int              @default(10) @map("default_reminder_minutes")
+  defaultEventDurationMinutes Int              @default(30) @map("default_event_duration_minutes")
+  timezoneBehavior            TimezoneBehavior @default(FIXED) @map("timezone_behavior")
+  criticalRemindersEnabled    Boolean          @default(false) @map("critical_reminders_enabled")
+  theme                       Theme            @default(SYSTEM)
+  notificationSound           String           @default("default") @map("notification_sound")
+  createdAt                   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@map("user_settings")
+}

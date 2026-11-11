@@ -21,6 +21,7 @@ model User {
   authIdentities AuthIdentity[]
   devices        UserDevice[]
   sessions       Session[]
+  settings       UserSettings?
 
   @@index([status, lastActiveAt])
   @@map("users")

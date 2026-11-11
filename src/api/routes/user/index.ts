@@ -14,6 +14,12 @@ function createUserRoute() {
     userController.updateProfile,
   );
   router.delete("/me", [isAuthenticated], userController.deleteAccount);
+  router.get("/me/settings", [isAuthenticated], userController.getSettings);
+  router.patch(
+    "/me/settings",
+    [isAuthenticated, validator(UserValidatorSchema.UpdateSettings)],
+    userController.updateSettings,
+  );
 
   return router;
 }
